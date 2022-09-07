@@ -1,40 +1,43 @@
+import { ChakraProvider, ColorModeScript, extendTheme } from '@chakra-ui/react';
 import React from 'react';
-import {
-  ChakraProvider,
-  Box,
-  Text,
-  Link,
-  VStack,
-  Code,
-  Grid,
-  theme,
-} from '@chakra-ui/react';
-import { ColorModeSwitcher } from './ColorModeSwitcher';
-import { Logo } from './Logo';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import HomeScreen from './pages/home';
+import MintPage from './pages/mint';
+import ProfilePage from './pages/profile';
+
+import { DAppProvider, Mainnet, Rinkeby } from '@usedapp/core';
+import { getDefaultProvider } from 'ethers';
+import { QueryClient, QueryClientProvider } from 'react-query';
 
 function App() {
+  const config = {
+    readOnlyChainId: Mainnet.chainId,
+    readOnlyUrls: {
+      [Mainnet.chainId]: getDefaultProvider('mainnet'),
+      [Rinkeby.chainId]: getDefaultProvider('rinkeby'),
+    },
+  };
+
+  const theme = extendTheme({
+    config: { initialColorMode: 'dark', useSystemColorMode: false },
+  });
+
+  const client = new QueryClient();
   return (
     <ChakraProvider theme={theme}>
-      <Box textAlign="center" fontSize="xl">
-        <Grid minH="100vh" p={3}>
-          <ColorModeSwitcher justifySelf="flex-end" />
-          <VStack spacing={8}>
-            <Logo h="40vmin" pointerEvents="none" />
-            <Text>
-              Edit <Code fontSize="xl">src/App.js</Code> and save to reload.
-            </Text>
-            <Link
-              color="teal.500"
-              href="https://chakra-ui.com"
-              fontSize="2xl"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn Chakra
-            </Link>
-          </VStack>
-        </Grid>
-      </Box>
+      <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+
+      <DAppProvider config={config}>
+        <QueryClientProvider client={client}>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<HomeScreen />} />
+              <Route path="/mint" element={<MintPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Routes>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </DAppProvider>
     </ChakraProvider>
   );
 }
